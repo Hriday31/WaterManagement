@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Water Management Server</title>
+    <style>
+      html {
+        font-family: Times New Roman;
+        display: inline-block;
+        text-align: center;
+      }
+      h2 {
+        font-size: 2.3rem;
+      }
+      p {
+        font-size: 2rem;
+      }
+      body {
+        max-width: 400px;
+        margin: 0px auto;
+        padding-bottom: 25px;
+      }
+      .slider {
+        -webkit-appearance: none;
+        margin: 14px;
+        width: 360px;
+        height: 25px;
+        background: #ff0000;
+        outline: none;
+        -webkit-transition: 0.2s;
+        transition: opacity 0.2s;
+      }
+      .slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 35px;
+        height: 35px;
+        background: #01070a;
+        cursor: pointer;
+      }
+      .slider::-moz-range-thumb {
+        width: 35px;
+        height: 35px;
+        background: #01070a;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Water Management Server</h2>
+    <p><span id="textslider_value">Motor Speed</span></p>
+    <p>
+      <input
+        type="range"
+        onchange="updateSliderPWM(this)"
+        id="pwmSlider"
+        min="0"
+        max="255"
+        value="%SLIDERVALUE%"
+        step="1"
+        class="slider"
+      />
+    </p>
+    <script>
+      function updateSliderPWM(element) {
+        var slider_value = document.getElementById("pwmSlider").value;
+        document.getElementById("textslider_value").innerHTML = slider_value;
+        console.log(slider_value);
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "/slider?value=" + slider_value, true);
+        xhr.send();
+      }
+    </script>
+  </body>
+</html>
