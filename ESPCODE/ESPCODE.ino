@@ -1,42 +1,152 @@
-// pin setup
-int motor1Pin1 = 27; 
-int motor1Pin2 = 26; 
-int enable1Pin = 14; 
+#include <WiFi.h>
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
 
-// Setting PWM properties
-const int freq = 30000;
-const int pwmChannel = 0;
+const char* ssid = "water";
+const char* password = "aquasquad";
+
+int ENA_pin = 14;
+int IN1 = 27;
+int IN2 = 26;
+String slider_value = "0";
+
+const int frequency = 500;
+const int pwm_channel = 0;
 const int resolution = 8;
-int dutyCycle = 200;
 
-void setup() {
-  pinMode(motor1Pin1, OUTPUT);
-  pinMode(motor1Pin2, OUTPUT);
-  pinMode(enable1Pin, OUTPUT);
-  
-  ledcSetup(pwmChannel, freq, resolution);
-  ledcAttachPin(enable1Pin, pwmChannel);
+const char* input_parameter = "value";
 
-  Serial.begin(115200);
+AsyncWebServer server(80);
+
+const char index_html[] PROGMEM = R"rawliteral(
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Water Management Server</title>
+    <style>
+      html {
+        font-family: Times New Roman;
+        display: inline-block;
+        text-align: center;
+      }
+      h2 {
+        font-size: 2.3rem;
+      }
+      p {
+        font-size: 2rem;
+      }
+      body {
+        max-width: 400px;
+        margin: 0px auto;
+        padding-bottom: 25px;
+      }
+      .slider {
+        -webkit-appearance: none;
+        margin: 14px;
+        width: 360px;
+        height: 25px;
+        background: #ff0000;
+        outline: none;
+        -webkit-transition: 0.2s;
+        transition: opacity 0.2s;
+      }
+      .slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 35px;
+        height: 35px;
+        background: #01070a;
+        cursor: pointer;
+      }
+      .slider::-moz-range-thumb {
+        width: 35px;
+        height: 35px;
+        background: #01070a;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Water Management Server</h2>
+    <p><span id="textslider_value">Motor Speed</span></p>
+    <p>
+      <input
+        type="range"
+        onchange="updateSliderPWM(this)"
+        id="pwmSlider"
+        min="0"
+        max="255"
+        value="%SLIDERVALUE%"
+        step="1"
+        class="slider"
+      />
+    </p>
+    <script>
+      function updateSliderPWM(element) {
+        var slider_value = document.getElementById("pwmSlider").value;
+        document.getElementById("textslider_value").innerHTML = slider_value;
+        console.log(slider_value);
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "/slider?value=" + slider_value, true);
+        xhr.send();
+      }
+    </script>
+  </body>
+</html>
+)rawliteral";
+
+String processor(const String& var){
+  if (var == "SLIDERVALUE"){
+    return slider_value;
+  }
+  return String();
 }
 
-void loop() {
-  Serial.println("Moving Forward");
-  digitalWrite(motor1Pin1, LOW);
-  digitalWrite(motor1Pin2, HIGH); 
-  delay(2000);
-  Serial.println("Motor stopped");
-  digitalWrite(motor1Pin1, LOW);
-  digitalWrite(motor1Pin2, LOW);
+void setup(){
+  Serial.begin(115200);
   delay(1000);
-  digitalWrite(motor1Pin1, HIGH);//testing pwm
-  digitalWrite(motor1Pin2, LOW);
-  while (dutyCycle <= 255){
-    ledcWrite(pwmChannel, dutyCycle);   
-    Serial.print("Forward with duty cycle: ");
-    Serial.println(dutyCycle);
-    dutyCycle = dutyCycle + 5;
-    delay(500);
+  pinMode(ENA_pin, OUTPUT);
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+
+  ledcSetup(pwm_channel, frequency, resolution);
+  ledcAttachPin(ENA_pin, pwm_channel);
+  ledcWrite(pwm_channel, slider_value.toInt());
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, LOW);
+
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Connecting...");
   }
-  dutyCycle = 200;
+
+  Serial.println(WiFi.localIP());
+
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send_P(200, "text/html", index_html, processor);
+  });
+
+  server.on("/slider", HTTP_GET, [] (AsyncWebServerRequest *request) {
+    String message;
+    if (request->hasParam(input_parameter)) {
+      message = request->getParam(input_parameter)->value();
+      slider_value = message;
+      ledcWrite(pwm_channel, slider_value.toInt());
+        digitalWrite(IN1, HIGH);
+        digitalWrite(IN2, LOW);
+    }
+    else {
+      message = "No message sent";
+    }
+    Serial.println(message);
+    request->send(200, "text/plain", "OK");
+  });
+  
+  server.begin();
+}
+  
+void loop() {
+  
 }
