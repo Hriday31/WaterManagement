@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65"
+      crossorigin="anonymous"
+    />
+    <title>Fire Control</title>
+    <style>
+      html {
+        padding: 20px;
+        background-color: #eee5e5;
+      }
+
+      body {
+        border-radius: 20px;
+        height: 95vh;
+        background: black;
+      }
+
+      .ring {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .loader {
+        position: relative;
+        width: 300px;
+        height: 300px;
+        border-radius: 50%;
+        background: linear-gradient(#000, #000000, #000);
+        animation: animate 1s linear infinite;
+      }
+
+      @keyframes animate {
+        0% {
+          transform: rotate(0deg);
+        }
+
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .loader span {
+        position: absolute;
+        width: 300px;
+        height: 300px;
+        border-radius: 50%;
+        background: linear-gradient(#ff0000, black, #ff0000);
+      }
+
+      .loader span:nth-child(1) {
+        filter: blur(20px);
+      }
+
+      .loader span:nth-child(2) {
+        filter: blur(40px);
+      }
+
+      .loader::after {
+        content: "";
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        background: black;
+        border-radius: 50%;
+      }
+
+      .topp {
+        /* background-color: #ec2731; */
+        height: 60px;
+        width: 170px;
+        padding: 2px;
+        margin-top: 2rem;
+        margin-right: 1rem;
+      }
+
+      .navbtn {
+        background-color: transparent;
+        font-size: small;
+        border: none;
+        border-radius: 50%;
+        height: 3rem;
+        width: 3rem;
+        margin: 0.1rem;
+        color: white;
+      }
+
+      .normal {
+        font-size: small;
+        color: black;
+
+      }
+
+      button.navbtn:hover,
+      button.navbtn:active {
+        background-color: #fff;
+        color: black;
+      }
+
+      button.normal {
+        background-color: #fff;
+      }
+
+      #circle {
+        border: none;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #ec2731;
+        width: 250px;
+        height: 250px;
+        margin-top: -275px;
+        z-index: 10;
+        color: #fff;
+        border-radius: 100%;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container-fluid">
+      <div class="row align-content-center" style="height: 10vh">
+        <div class="col-6"></div>
+        <div class="col-6 d-inline-flex justify-content-end">
+          <div class="rounded-pill topp d-inline-flex justify-content-around">
+            <a href="motor.html"><button class="navbtn">Valve</button></a>
+            <button class="navbtn normal">Fire</button>
+            <a href="leak.html"><button class="navbtn">Leak</button></a>
+          </div>
+        </div>
+      </div>
+      <div class="row align-content-center" style="height: 20vh"></div>
+      <div class="row d-flex justify-content-center align-content-center">
+        <div class="ring">
+          <div class="loader">
+            <span class="sp"></span>
+            <span class="sp"></span>
+            <span class="sp"></span>
+            <span class="sp"></span>
+          </div>
+        </div>
+        <button id="circle" onclick="change()">
+          <h1 id="a">EMERGENCY</h1>
+        </button>
+      </div>
+    </div>
+    <script>
+      src =
+        "https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js";
+      integrity =
+        "sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4";
+      crossorigin = "anonymous";
+      i = 0;
+      function change() {
+        if (i % 2 == 0) {
+          button = document.getElementById("circle");
+          a = document.getElementById("a");
+          button.style.backgroundColor = "#0879b6";
+          a.innerText = "STOP";
+          htmlcolor = document.querySelector("html");
+          htmlcolor.style.backgroundColor = "aliceblue";
+          i++;
+          var ele = document.getElementsByClassName("sp");
+          for (var j = 0; j < ele.length; j++) {
+            ele[j].style.background =
+              "linear-gradient(#0f5e9c, #1ca3ec, #0f5e9c)";
+          }
+          updateSliderPWMon();
+        } else {
+          updateSliderPWMoff();
+          location.reload();
+          i++;
+        }
+      }
+      function updateSliderPWMon() {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "/slideron", true);
+        xhr.send();
+      }
+      function updateSliderPWMoff() {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "/slideroff", true);
+        xhr.send();
+      }
+    </script>
+  </body>
+</html>
